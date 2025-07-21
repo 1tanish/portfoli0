@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Start Deployment
+        id: deployment                # 👈 Give this step an ID
         uses: bobheadxi/deployments@v1
         with:
           step: start
@@ -27,5 +28,6 @@ jobs:
           status: success
           env: production
           ref: ${{ github.sha }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}  # 👈 Fix
           env_url: https://portfoli0-9n2k.onrender.com
           logs: https://dashboard.render.com/web/srv-d1uverer433s73f5tj4g/logs
