@@ -16,8 +16,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           env: production
           ref: ${{ github.sha }}
-          target-url: https://portfoli0-9n2k.onrender.com
-          log-url: https://dashboard.render.com/web/srv-d1uverer433s73f5tj4g/logs
+          env_url: https://portfoli0-9n2k.onrender.com
+          logs: https://dashboard.render.com/web/srv-d1uverer433s73f5tj4g/logs
 
       - name: Finish Deployment
         uses: bobheadxi/deployments@v1
@@ -27,5 +27,5 @@ jobs:
           status: success
           env: production
           ref: ${{ github.sha }}
-          target-url: https://your-app-name.onrender.com
-          log-url: https://dashboard.render.com/web/srv-XXXX/logs
+          env_url: https://portfoli0-9n2k.onrender.com
+          logs: https://dashboard.render.com/web/srv-d1uverer433s73f5tj4g/logs
