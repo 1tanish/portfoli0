@@ -6,7 +6,7 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 const updatesFile = path.join(__dirname, "jsons/updates.json");
 const todosFile = path.join(__dirname, "jsons/todo.json");
 const statusFile = path.join(__dirname, "jsons/status.json");
