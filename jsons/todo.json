@@ -1,0 +1,11 @@
+[
+  { "text": "add better auth to new Update btn", "done":true },
+  { "text": "add spotify lastPlayed func", "done":true },
+  { "text": "update homepage", "done":true },
+  { "text": "create about page", "done":false },
+  { "text": "create project page", "done":false },
+  { "text": "create stuff", "done":false },
+  { "text": "create links page", "done":false },
+  { "text": "create guest book", "done":false },
+  { "text": "create status log", "done":true }
+]
