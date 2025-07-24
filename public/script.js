@@ -277,6 +277,10 @@ async function showNowOrLastPlayed() {
       const tracklink = track.external_urls.spotify;
       spotifystatus.innerHTML = `<a href="${tracklink}" target="_blank"><span class="text-[var(--priclr)]">Now Playing:</span> ${track.name} ~ ${track.artists.map((a) => a.name).join(", ")}</a>`;
       onlinestatus.classList.replace("text-[var(--off)]", "text-[var(--on)]");
+      const music = document.createElement("img");
+      music.setAttribute("src", "images/music.gif");
+      music.classList.add("w-[32px]", "h-[32px]", "absolute", "bottom-[-5px]", "right-0");
+      onlinestatus.append(music);
     } else {
       throw new Error("Paused or not actively playing");
     }
