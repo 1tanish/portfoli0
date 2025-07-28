@@ -30,12 +30,14 @@ app.use(express.static("public"));
 
 
 // todos section
-app.get("/get-todos", (req, res) => {
-  if (!fs.existsSync(todosFile)) {
-    return res.json([]);
+const Todo = require("./models/Todo.js");
+app.get("/get-todos", async (req, res) => {
+  try{
+    const data = await Todo.find()
+    res.json(data);
+  } catch{
+    console.log('todo not fetched')
   }
-  const data = fs.readFileSync(todosFile, "utf-8");
-  res.json(JSON.parse(data));
 });
 
 

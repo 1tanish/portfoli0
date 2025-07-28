@@ -202,6 +202,7 @@ async function todolistdisplay() {
   let sum = "";
 
   try {
+    todolist.innerHTML='<span class="text-[var(--secclr2)]">fetching todos...</span>'
     const todos = await fetch("/get-todos");
     const mytodos = await todos.json();
 
