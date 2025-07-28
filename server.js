@@ -8,10 +8,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("Connected to MongoDB");
   })
@@ -28,18 +25,16 @@ const statusFile = path.join(__dirname, "jsons/status.json");
 app.use(express.json());
 app.use(express.static("public"));
 
-
 // todos section
 const Todo = require("./models/Todo.js");
 app.get("/get-todos", async (req, res) => {
-  try{
-    const data = await Todo.find()
+  try {
+    const data = await Todo.find();
     res.json(data);
-  } catch{
-    console.log('todo not fetched')
+  } catch {
+    console.log("todo not fetched");
   }
 });
-
 
 // Updates section
 const Update = require("./models/Update.js");
@@ -166,12 +161,11 @@ app.post("/submit-status", verifyToken, async (req, res) => {
 
   const newStatus = new Status({
     status: status,
-    date: new Date()
+    date: new Date(),
   });
 
   await newStatus.save();
-  console.log("status pushed");
-  
+
   res.sendStatus(200);
 });
 
