@@ -5,25 +5,31 @@ const fetch = require("node-fetch");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
+const mongoose = require("mongoose");
+
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
+
 const app = express();
 const PORT = 3000;
-const updatesFile = path.join(__dirname, "jsons/updates.json");
+// const updatesFile = path.join(__dirname, "jsons/updates.json");
 const todosFile = path.join(__dirname, "jsons/todo.json");
 const statusFile = path.join(__dirname, "jsons/status.json");
 
 app.use(express.json());
 app.use(express.static("public"));
 
-// Get all updates
-app.get("/get-updates", (req, res) => {
-  if (!fs.existsSync(updatesFile)) {
-    return res.json([]);
-  }
-  const data = fs.readFileSync(updatesFile, "utf-8");
-  res.json(JSON.parse(data));
-});
 
-// Get all todos
+// todos section
 app.get("/get-todos", (req, res) => {
   if (!fs.existsSync(todosFile)) {
     return res.json([]);
@@ -33,19 +39,17 @@ app.get("/get-todos", (req, res) => {
 });
 
 
-function verifyToken(req, res, next) {
-  const secretKey = process.env.JWT_SECRET_KEY;
-  const authHeader = req.headers["authorization"];
-  if (!authHeader) return res.status(403).send("No token provided");
-
-  const token = authHeader.split(" ")[1];
-  
-  jwt.verify(token, secretKey, (err, decoded) => {
-    if (err) return res.status(403).send("Invalid or expired token");
-    req.user = decoded;
-    next();
-  });
-}
+// Updates section
+const Update = require("./models/Update.js");
+app.get("/get-updates", async (req, res) => {
+  try {
+    const updates = await Update.find().sort({ date: -1 });
+    res.json(updates);
+  } catch (err) {
+    console.error("Failed to fetch updates:", err);
+    res.status(500).send("Failed to fetch updates from MongoDB");
+  }
+});
 
 app.post("/auth-update", (req, res) => {
   const userpass = req.body.pass;
@@ -58,35 +62,64 @@ app.post("/auth-update", (req, res) => {
 
   if (userpass === adminPass) {
     const token = jwt.sign({ role: "admin" }, secretKey, { expiresIn: "1h" });
-    return res.status(200).json({token});
+    return res.status(200).json({ token });
   } else {
     return res.status(401).send("Wrong password");
   }
 });
 
-app.post("/submit-update", verifyToken, (req, res) => {
+function verifyToken(req, res, next) {
+  const secretKey = process.env.JWT_SECRET_KEY;
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) return res.status(403).send("No token provided");
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) return res.status(403).send("Invalid or expired token");
+    req.user = decoded;
+    next();
+  });
+}
+
+// app.post("/submit-update", verifyToken, (req, res) => {
+//   const { text } = req.body;
+//   if (!text) return res.status(400).send("Missing update text.");
+
+//   const newUpdate = {
+//     text,
+//     date: new Date().toISOString().slice(0, 10).replace(/-/g, ""),
+//   };
+
+//   const existingUpdates = fs.existsSync(updatesFile) ? JSON.parse(fs.readFileSync(updatesFile, "utf-8")) : [];
+//   existingUpdates.push(newUpdate);
+
+//   fs.writeFileSync(updatesFile, JSON.stringify(existingUpdates, null, 2));
+
+//   res.sendStatus(200);
+// });
+app.post("/submit-update", verifyToken, async (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).send("Missing update text.");
 
-  const newUpdate = {
+  const newUpdate = new Update({
     text,
     date: new Date().toISOString().slice(0, 10).replace(/-/g, ""),
-  };
+  });
 
-  const existingUpdates = fs.existsSync(updatesFile) ? JSON.parse(fs.readFileSync(updatesFile, "utf-8")) : [];
-  existingUpdates.push(newUpdate);
-
-  fs.writeFileSync(updatesFile, JSON.stringify(existingUpdates, null, 2));
-
+  await newUpdate.save();
   res.sendStatus(200);
 });
 
-app.get("/get-statuses", (req, res) => {
-  if (!fs.existsSync(statusFile)) {
-    return res.json([]);
+////////////Status
+const Status = require("./models/Status.js");
+app.get("/get-statuses", async (req, res) => {
+  try {
+    const statuses = await Status.find().sort({ date: -1 });
+    res.json(statuses);
+  } catch (err) {
+    res.status(500).send("Failed to fetch statuses from MongoDB");
   }
-  const data = fs.readFileSync(statusFile, "utf-8");
-  res.json(JSON.parse(data));
 });
 
 app.post("/auth-status", (req, res) => {
@@ -99,66 +132,52 @@ app.post("/auth-status", (req, res) => {
 
   if (passInp === passAdmin) {
     const token = jwt.sign({ role: "admin" }, secretKey, { expiresIn: "1h" });
-    return res.status(200).json({token});
+    return res.status(200).json({ token });
   } else {
     return res.status(401).send("Authenticated failed");
   }
 });
 
-app.post("/submit-status", verifyToken, (req, res) => {
+// app.post("/submit-status", verifyToken, (req, res) => {
+//   const status = req.body.status;
+
+//   if (!status) {
+//     return res.status(400).send("Missing status");
+//   }
+
+//   const newStatus = {
+//     status: status,
+//     date: new Date(),
+//   };
+
+//   const existingStatuses = fs.existsSync(statusFile) ? JSON.parse(fs.readFileSync(statusFile, "utf-8")) : [];
+//   existingStatuses.push(newStatus);
+
+//   fs.writeFileSync(statusFile, JSON.stringify(existingStatuses, null, 2));
+
+//   res.sendStatus(200);
+// });
+
+app.post("/submit-status", verifyToken, async (req, res) => {
   const status = req.body.status;
+  if (!status) return res.status(400).send("Missing status.");
 
-  if (!status) {
-    return res.status(400).send("Missing status");
-  }
-
-  const newStatus = {
+  const newStatus = new Status({
     status: status,
     date: new Date()
-  };
+  });
 
-  const existingStatuses = fs.existsSync(statusFile) ? JSON.parse(fs.readFileSync(statusFile, "utf-8")) : [];
-  existingStatuses.push(newStatus);
-
-  fs.writeFileSync(statusFile, JSON.stringify(existingStatuses, null, 2));
-
+  await newStatus.save();
+  console.log("status pushed");
+  
   res.sendStatus(200);
 });
 
-
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
 
-///////spotify
-// app.get("/callback", async (req, res) => {
-//   const code = req.query.code;
-//   if (!code) return res.status(400).send("Missing code");
-
-//   const response = await fetch("https://accounts.spotify.com/api/token", {
-//     method: "POST",
-//     headers: {
-//       Authorization: "Basic " + Buffer.from(process.env.SPOTIFY_CLIENT_ID + ":" + process.env.SPOTIFY_CLIENT_SECRET).toString("base64"),
-//       "Content-Type": "application/x-www-form-urlencoded",
-//     },
-//     body: new URLSearchParams({
-//       grant_type: "authorization_code",
-//       code,
-//       redirect_uri: "http://127.0.0.1:3000/callback",
-//     }),
-//   });
-
-//   const data = await response.json();
-
-//   res.send(`
-//     <h2>✅ Token received!</h2>
-//     <p><strong>Access Token:</strong> ${data.access_token}</p>
-//     <p><strong>Refresh Token:</strong> ${data.refresh_token}</p>
-//     <p>Paste your refresh token into your <code>.env</code> file to complete setup.</p>
-//   `);
-// });
-//////////above code was only for one
-
+///////////////////spotify////////////////////////////
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;

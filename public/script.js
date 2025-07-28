@@ -92,10 +92,11 @@ imageclickbig();
 async function updatelistdisplay() {
   let sum = "";
   try {
+    updatelist.innerHTML= `<li class="text-white">Fetching updates...</li>`;
     const res = await fetch("/get-updates");
     const myupdates = await res.json();
-
-    myupdates.reverse().forEach((update) => {
+    
+    myupdates.forEach((update) => {
       sum += `<li class="leading-[1]">
                 <h1><span class="taskcomp text-[var(--pntd)] font-bold">${update.date}: </span><span class="taskcontent">${update.text}</span></h1>
               </li>`;
@@ -339,12 +340,14 @@ async function statusLogDisplay() {
   let latestStatus = "";
   let latestStatusDate = "";
   try {
+    statuslist.innerHTML= `<h1 class="text-white">Fetching Statuses...</h1>`;
+    latestStatusBox.innerText='Fetching latest status....'
     const statuses = await fetch("/get-statuses");
     const myStatuses = await statuses.json();
-    latestStatus = myStatuses[myStatuses.length - 1].status;
-    latestStatusDate = myStatuses[myStatuses.length - 1].date.slice(0, 10).replace(/-/g, "");
+    latestStatus = myStatuses[0].status;
+    latestStatusDate = myStatuses[0].date.slice(0, 10).replace(/-/g, "");
 
-    myStatuses.reverse().forEach((myStatus, idx) => {
+    myStatuses.forEach((myStatus, idx) => {
       const curr = new Date();
       const statusDate = new Date(myStatus.date);
 
