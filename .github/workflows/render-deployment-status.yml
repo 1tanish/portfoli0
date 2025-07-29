@@ -3,7 +3,7 @@ name: Report Render Deployment
 on:
   push:
     branches:
-      - main
+      - mongo_db
 
 jobs:
   deployment-status:
